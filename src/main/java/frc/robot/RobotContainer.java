@@ -7,6 +7,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.subsystems.PhotonVision;
 import frc.robot.subsystems.Swerve;
 import frc.thunder.LightningContainer;
 import frc.robot.Constants.TunerConstants;
@@ -16,6 +17,7 @@ public class RobotContainer extends LightningContainer {
     private final XboxController driver = new XboxController(0);
 
     private final Swerve drivetrain = getDrivetrain();
+    private final PhotonVision vision = new PhotonVision();
 
     private final Telemetry logger = new Telemetry(drivetrain.getMaxSpeed());
 

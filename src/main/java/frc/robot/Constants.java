@@ -220,6 +220,10 @@ public class Constants {
 
             public static final int PigeonId = 23;
         }
+        
+        public class VisionConstants {
+            public static final String camera1Name = "photoncam";
+        }
     }
 
     public class AutonomousConstants {
