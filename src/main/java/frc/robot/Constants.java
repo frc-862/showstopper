@@ -11,6 +11,7 @@ import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants.SteerFeedbackType;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstantsFactory;
 
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.subsystems.Swerve;
 
@@ -183,6 +184,9 @@ public class Constants {
 
         public static final double ROT_MULT = 0.04;
 
+        public static final double NORMAL_ROT_MULT = 1;
+        public static final double NORMAL_SPEED_MULT = 1;
+
         public static final double SLOW_ROT_MULT = 0.7;
         public static final double SLOW_SPEED_MULT = 0.4;
 
@@ -216,5 +220,13 @@ public class Constants {
 
             public static final int PigeonId = 23;
         }
+    }
+
+    public class AutonomousConstants {
+
+    }
+
+    public class PoseConstants {
+        public static final Translation2d FIELD_LIMIT = new Translation2d(Units.feetToMeters(54.0), Units.feetToMeters(26.0));
     }
 }

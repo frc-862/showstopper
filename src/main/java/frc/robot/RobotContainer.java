@@ -4,63 +4,87 @@
 
 package frc.robot;
 
-import com.ctre.phoenix6.Utils;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
-
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.Swerve;
+import frc.thunder.LightningContainer;
 import frc.robot.Constants.TunerConstants;
 
-public class RobotContainer {
+public class RobotContainer extends LightningContainer {
 
-    private double MaxSpeed = TunerConstants.kSpeedAt12VoltsMps; // kSpeedAt12VoltsMps desired top speed
-    private double MaxAngularRate = 1.5 * Math.PI; // 3/4 of a rotation per second max angular velocity
+    private final XboxController driver = new XboxController(0);
 
-    private final CommandXboxController joystick = new CommandXboxController(0);
-    private final Swerve drivetrain = TunerConstants.DriveTrain;
+    private final Swerve drivetrain = getDrivetrain();
 
-    private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
-            .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // I want field-centric
-                                                                     // driving in open loop
-    private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
-    private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
+    private final Telemetry logger = new Telemetry(drivetrain.getMaxSpeed());
 
-    private final Telemetry logger = new Telemetry(MaxSpeed);
+    @Override
+    protected void initializeSubsystems() {
 
-    private void configureBindings() {
-        drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
-                drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * MaxSpeed)
-                        .withVelocityY(-joystick.getLeftX() * MaxSpeed)
-                        .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with
-                                                                                    // negative X (left)
-                ));
+    }
 
-        joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
-        joystick.b().whileTrue(drivetrain
-                .applyRequest(
-                        () -> point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))));
+    @Override
+    protected void configureButtonBindings() {
+        new Trigger(() -> driver.getLeftTriggerAxis() > 0.25d).whileTrue(
+                drivetrain.applyPercentRequestRobot(
+                        () -> -driver.getLeftY(),
+                        () -> -driver.getLeftX(),
+                        () -> -driver.getRightX()));
 
-        // reset the field-centric heading on left bumper press
-        joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));
+        new Trigger(() -> driver.getRightTriggerAxis() > 0.25d)
+                .onTrue(drivetrain.enableSlowMode())
+                .onFalse(drivetrain.disableSlowMode());
 
-        if (Utils.isSimulation()) {
-            drivetrain.seedFieldRelative(new Pose2d(new Translation2d(), Rotation2d.fromDegrees(90)));
-        }
+        new Trigger(() -> driver.getStartButton() && driver.getBackButton()).onTrue(drivetrain.resetForward());
+
+        new Trigger(driver::getXButton).onTrue(drivetrain.setBrake());
+
+        // if (Utils.isSimulation()) {
+        //     drivetrain.seedFieldRelative(new Pose2d(new Translation2d(), Rotation2d.fromDegrees(90)));
+        // }
+    }
+
+    @Override
+    protected void configureDefaultCommands() {
+        drivetrain.setDefaultCommand(
+                drivetrain.applyPercentRequestField(() -> -(driver.getLeftY() * drivetrain.getSpeedMult()),
+                        () -> -(driver.getLeftX() * drivetrain.getSpeedMult()),
+                        () -> -(driver.getRightX() * drivetrain.getRotMult())));
+
         drivetrain.registerTelemetry(logger::telemeterize);
     }
 
-    public RobotContainer() {
-        configureBindings();
+    @Override
+    protected void initializeNamedCommands() {
     }
 
-    public Command getAutonomousCommand() {
-        return Commands.print("No autonomous command configured");
+    @Override
+    protected void configureSystemTests() {
+    }
+
+    @Override
+    protected void releaseDefaultCommands() {
+    }
+
+    @Override
+    protected void initializeDashboardCommands() {
+    }
+
+    @Override
+    protected void configureFaultCodes() {
+    }
+
+    @Override
+    protected void configureFaultMonitors() {
+    }
+
+    @Override
+    protected Command getAutonomousCommand() {
+        return null;
+    }
+
+    public Swerve getDrivetrain() {
+        return drivetrain == null ? TunerConstants.DriveTrain : drivetrain;
     }
 }
